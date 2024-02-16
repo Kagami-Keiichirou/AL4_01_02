@@ -20,20 +20,68 @@ void GameScene::Initialize() {
 	// 3Dモデルの生成
 	modelSkydome_.reset(Model::CreateFromOBJ("skydome", true));
 	modelGround_.reset(Model::CreateFromOBJ("ground", true));
-	modelFighter_.reset(Model::CreateFromOBJ("float", true));
+	modelFighterBody_.reset(Model::CreateFromOBJ("float_Body", true));
+	modelFighterHead_.reset(Model::CreateFromOBJ("float_Head", true));
+	modelFighterL_arm_.reset(Model::CreateFromOBJ("float_L_arm", true));
+	modelFighterR_arm_.reset(Model::CreateFromOBJ("float_R_arm", true));
 
-	// クラスの生成
+	// 自機
 	player_ = std::make_unique<Player>();
-	ground_ = std::make_unique<Ground>();
-	skydome_ = std::make_unique<Skydome>();
+	player_->Initialize(
+	    modelFighterBody_.get(),
+		modelFighterHead_.get(),
+		modelFighterL_arm_.get(),
+	    modelFighterR_arm_.get()
+	);
 
-	// クラスの初期化
-	player_->Initialize(modelFighter_.get());
+	// 地面
+	ground_ = std::make_unique<Ground>();
 	ground_->Initialize(modelGround_.get());
+
+	// スカイドーム
+	skydome_ = std::make_unique<Skydome>();
 	skydome_->Initialize(modelSkydome_.get());
+
+	// デバッグカメラ
+	debugCamera_ = std::make_unique<DebugCamera>(WinApp::kWindowWidth, WinApp::kWindowHeight);
+	debugCamera_->SetFarZ(2000.0f);
+
+	// 追従カメラ
+	followCamera_ = std::make_unique<FollowCamera>();
+	followCamera_->Initialize();
+
+	player_->SetViewProjection(&followCamera_->GetViewProjection());
+
+	// 自キャラのワールドトランスフォームを追従カメラにセット
+	followCamera_->SetTarget(&player_->GetWorldTransform());
+
+	// 軸方向表示の表示を有効にする
+	AxisIndicator::GetInstance()->SetVisible(true);
+	// 軸方向表示が参照するビュープロジェクションを指定する(アドレス渡し)
+	AxisIndicator::GetInstance()->SetTargetViewProjection(&debugCamera_->GetViewProjection());
 }
 
-void GameScene::Update() {}
+// 更新
+void GameScene::Update() {
+	// デバッグカメラの更新
+	if (input_->TriggerKey(DIK_0)) {
+		// フラグをトグル
+		isDebugCameraActive_ = !isDebugCameraActive_;
+	}
+	if (isDebugCameraActive_ == true) {
+		debugCamera_->Update();
+		viewProjection_.matView = debugCamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = debugCamera_->GetViewProjection().matProjection;
+	} else {
+		followCamera_->Update();
+		viewProjection_.matView = followCamera_->GetViewProjection().matView;
+		viewProjection_.matProjection = followCamera_->GetViewProjection().matProjection;
+	}
+	// ビュープロジェクションの転送
+	viewProjection_.TransferMatrix();
+
+	player_->Update();
+}
 
 void GameScene::Draw() {
 

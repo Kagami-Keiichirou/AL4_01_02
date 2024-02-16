@@ -11,6 +11,9 @@
 #include "Player.h"
 #include "Ground.h"
 #include "Skydome.h"
+#include "DebugCamera.h"
+#include "FollowCamera.h"
+#include "AxisIndicator.h"
 #include <memory>
 
 /// <summary>
@@ -58,14 +61,22 @@ private: // メンバ変数
 	// テクスチャハンドル
 	uint32_t textureHandle_ = 0u;
 	//モデルデータ
-	std::unique_ptr<Model> modelFighter_;
-	// 3Dモデル
 	std::unique_ptr<Model> modelSkydome_;
-	// 3Dモデル
 	std::unique_ptr<Model> modelGround_;
-
-	//クラス
+	std::unique_ptr<Model> modelFighterBody_;
+	std::unique_ptr<Model> modelFighterHead_;
+	std::unique_ptr<Model> modelFighterL_arm_;
+	std::unique_ptr<Model> modelFighterR_arm_;
+	
+	// クラス
 	std::unique_ptr<Player> player_;
 	std::unique_ptr<Ground> ground_;
 	std::unique_ptr<Skydome> skydome_;
+	std::unique_ptr<FollowCamera> followCamera_;
+
+	// デバッグカメラ
+	std::unique_ptr<DebugCamera> debugCamera_;
+
+	// デバッグカメラ有効
+	bool isDebugCameraActive_ = false;
 };
